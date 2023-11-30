@@ -43,13 +43,13 @@
     "ios",
     "android"
   ],
-  "repository": "https://github.com/carlosducloscaballero/react-native-rsa-encryption",
-  "author": "Carlos Duclos <cduclos@landgorilla.com> (https://github.com/carlosducloscaballero)",
+  "repository": "https://github.com/LandGorilla/react-native-rsa-encryption.git",
+  "author": "Carlos Duclos <cduclos@landgorilla.com> (https://github.com/LandGorilla)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/carlosducloscaballero/react-native-rsa-encryption/issues"
+    "url": "https://github.com/LandGorilla/react-native-rsa-encryption/issues"
   },
-  "homepage": "https://github.com/carlosducloscaballero/react-native-rsa-encryption#readme",
+  "homepage": "https://github.com/LandGorilla/react-native-rsa-encryption#readme",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },

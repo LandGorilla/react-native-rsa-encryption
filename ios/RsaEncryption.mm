@@ -2,9 +2,13 @@
 
 @interface RCT_EXTERN_MODULE(RsaEncryption, NSObject)
 
-RCT_EXTERN_METHOD(multiply:(float)a withB:(float)b
-                 withResolver:(RCTPromiseResolveBlock)resolve
-                 withRejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXTERN_METHOD(encrypt:(nonnull NSString *)pemEncoded withData:(nonnull NSDictionary *)data
+                  withResolver:(RCTPromiseResolveBlock)resolve
+                  withRejecter:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(decrypt:(nonnull NSString *)pemEncoded withEncryptedMessage:(nonnull NSString *)encryptedMessage
+                  withResolver:(RCTPromiseResolveBlock)resolve
+                  withRejecter:(RCTPromiseRejectBlock)reject)
 
 + (BOOL)requiresMainQueueSetup
 {

@@ -17,6 +17,10 @@ const RsaEncryption = NativeModules.RsaEncryption
       }
     );
 
-export function multiply(a: number, b: number): Promise<number> {
-  return RsaEncryption.multiply(a, b);
+export function encrypt(certificate: string, data: any): Promise<string> {
+  return RsaEncryption.encrypt(certificate, data);
+}
+
+export function decrypt(certificate: string, encrypted: string): Promise<string> {
+  return RsaEncryption.decrypt(certificate, encrypted);
 }
