@@ -18,9 +18,15 @@ const RsaEncryption = NativeModules.RsaEncryption
     );
 
 export function encrypt(certificate: string, data: any): Promise<string> {
-  return RsaEncryption.encrypt(certificate, data);
+  return RsaEncryption.encrypt(
+    certificate,
+    Platform.OS === 'ios' ? data : JSON.stringify(data)
+  );
 }
 
-export function decrypt(certificate: string, encrypted: string): Promise<string> {
+export function decrypt(
+  certificate: string,
+  encrypted: string
+): Promise<string> {
   return RsaEncryption.decrypt(certificate, encrypted);
 }
