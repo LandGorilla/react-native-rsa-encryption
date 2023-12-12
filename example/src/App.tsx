@@ -77,9 +77,9 @@ export default function App() {
   React.useEffect(() => {
     const handleEncryptionDecryption = async () => {
       const data = {
-        'photo_uuid': '0b2b577d-83c2-47cd-beab-86f58fa4358e',
-        'latitude': '21.2434252',
-        'longitude': '14.093483'
+        photo_uuid: '0b2b577d-83c2-47cd-beab-86f58fa4358e',
+        latitude: '21.2434252',
+        longitude: '14.093483',
       };
 
       try {
@@ -89,12 +89,12 @@ export default function App() {
         const decryptedData = await decrypt(privateKey, encryptedData);
         setDecrypted(decryptedData);
       } catch (error) {
-        console.error("Error in encryption/decryption process", error);
+        console.error('Error in encryption/decryption process', error);
       }
     };
 
     handleEncryptionDecryption();
-  }, []); 
+  }, []);
 
   return (
     <View style={styles.container}>
