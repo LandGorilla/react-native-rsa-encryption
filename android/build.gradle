@@ -5,6 +5,9 @@ buildscript {
   repositories {
     google()
     mavenCentral()
+    maven {
+      url "https://plugins.gradle.org/m2/"
+    }
   }
 
   dependencies {
@@ -83,6 +86,9 @@ dependencies {
   //noinspection GradleDynamicVersion
   implementation "com.facebook.react:react-native:+"
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+  implementation "org.bouncycastle:bcprov-jdk15on:1.68"
+
+
 }
 
 if (isNewArchitectureEnabled()) {
