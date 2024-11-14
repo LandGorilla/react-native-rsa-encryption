@@ -23,6 +23,11 @@ import { encrypt, decrypt } from 'react-native-rsa-encryption';
 try {
     const encryptedData = await encrypt(publicKey, data);
     const decryptedData = await decrypt(privateKey, encryptedData);
+
+    const keyPair = await generateKeyPair();
+    console.log("privateKey: " + keyPair.privateKey);
+    console.log("publicKey: " + keyPair.publicKey);
+    const signature = await generateImageSignature("/path/to/image", keyPair.privateKey);
 } catch (error) {
     console.error("Error in encryption/decryption process", error);
 }

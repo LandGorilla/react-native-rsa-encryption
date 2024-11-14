@@ -1,7 +1,7 @@
 import * as React from 'react';
 
 import { StyleSheet, View, Text } from 'react-native';
-import { encrypt, decrypt } from 'react-native-rsa-encryption';
+import { encrypt, decrypt, generateKeyPair, generateImageSignature } from 'react-native-rsa-encryption';
 
 const publicKey = `-----BEGIN PUBLIC KEY-----
 MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEA8V6SmMNGSJAIR9AfBlfe

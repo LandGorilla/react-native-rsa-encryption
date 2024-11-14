@@ -30,3 +30,16 @@ export function decrypt(
 ): Promise<string> {
   return RsaEncryption.decrypt(certificate, encrypted);
 }
+
+interface KeyPair {
+  publicKey: string;
+  privateKey: string;
+}
+
+export function generateKeyPair(): Promise<KeyPair> {
+  return RsaEncryption.generateKeyPair();
+}
+
+export function generateImageSignature(path: string, privateKey: string): Promise<string> {
+  return RsaEncryption.generateImageSignature(path, privateKey);
+}
