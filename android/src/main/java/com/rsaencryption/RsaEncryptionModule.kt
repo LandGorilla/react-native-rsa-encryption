@@ -13,14 +13,17 @@ import java.security.spec.X509EncodedKeySpec
 import java.security.spec.PKCS8EncodedKeySpec
 import javax.crypto.Cipher
 import android.util.Base64
+import org.json.JSONObject
+import java.security.KeyPairGenerator
+
 
 class RsaEncryptionModule(reactContext: ReactApplicationContext) :
   ReactContextBaseJavaModule(reactContext) {
-  
+
   override fun getName(): String {
     return NAME
   }
-  
+
   @ReactMethod
   fun encrypt(pk: String, txt: String, promise: Promise) {
     try {
@@ -34,7 +37,7 @@ class RsaEncryptionModule(reactContext: ReactApplicationContext) :
         cipher.init(Cipher.ENCRYPT_MODE, pubKey)
         var encrypted = cipher.doFinal(txt.toByteArray())
         var encoded = Base64.encodeToString(encrypted, Base64.DEFAULT)
-        
+
         promise.resolve(encoded)
     } catch (e: Exception) {
         promise.reject(e.toString(), e)
@@ -61,6 +64,37 @@ class RsaEncryptionModule(reactContext: ReactApplicationContext) :
         promise.reject(e.toString(), e)
     }
   }
+
+
+    @ReactMethod
+    fun generateKeyPair(promise: Promise) {
+        try {
+
+            val keyPairGenerator = KeyPairGenerator.getInstance("RSA")
+            keyPairGenerator.initialize(4096)
+            val keyPair = keyPairGenerator.generateKeyPair()
+
+
+            val publicKey = keyPair.public
+            val privateKey = keyPair.private
+
+
+            val publicKeyBase64 = Base64.encodeToString(publicKey.encoded, Base64.DEFAULT)
+            val privateKeyBase64 = Base64.encodeToString(privateKey.encoded, Base64.DEFAULT)
+
+
+            val publicKeyPEM = "-----BEGIN PUBLIC KEY-----\n${publicKeyBase64.trim()}\n-----END PUBLIC KEY-----"
+            val privateKeyPEM = "-----BEGIN PRIVATE KEY-----\n${privateKeyBase64.trim()}\n-----END PRIVATE KEY-----"
+
+
+            val result = mapOf("privateKey" to privateKeyPEM, "publicKey" to publicKeyPEM)
+
+
+            promise.resolve(JSONObject(result).toString())
+        } catch (e: Exception) {
+            promise.reject("KeyGenerationError", "Error-generateKeyPair", e)
+        }
+    }
 
   companion object {
     const val NAME = "RsaEncryption"
