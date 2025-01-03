@@ -15,6 +15,8 @@ import javax.crypto.Cipher
 import android.util.Base64
 import org.json.JSONObject
 import java.security.KeyPairGenerator
+import java.io.File
+import java.security.Signature
 
 
 class RsaEncryptionModule(reactContext: ReactApplicationContext) :
@@ -93,6 +95,35 @@ class RsaEncryptionModule(reactContext: ReactApplicationContext) :
             promise.resolve(JSONObject(result).toString())
         } catch (e: Exception) {
             promise.reject("KeyGenerationError", "Error-generateKeyPair", e)
+        }
+    }
+
+    @ReactMethod
+    fun generateImageSignature(path: String, privateKeyPEM: String, promise: Promise) {
+        try {
+            // Leer los bytes de la imagen
+            val imageBytes = File(path).readBytes()
+
+            // Convertir clave privada PEM a PrivateKey
+            val cleanedKey = privateKeyPEM.replace("-----BEGIN PRIVATE KEY-----", "")
+                .replace("-----END PRIVATE KEY-----", "")
+                .replace("\\s".toRegex(), "")
+            val keyBytes = Base64.decode(cleanedKey, Base64.DEFAULT)
+            val keySpec = PKCS8EncodedKeySpec(keyBytes)
+            val keyFactory = KeyFactory.getInstance("RSA")
+            val privateKey = keyFactory.generatePrivate(keySpec)
+
+            // Firmar los datos
+            val signature = Signature.getInstance("SHA256withRSA")
+            signature.initSign(privateKey)
+            signature.update(imageBytes)
+            val signedData = signature.sign()
+
+            // Codificar en Base64 y resolver la promesa
+            val signatureBase64 = Base64.encodeToString(signedData, Base64.DEFAULT)
+            promise.resolve(signatureBase64)
+        } catch (e: Exception) {
+            promise.reject("ImageSignatureError", "Error generating image signature", e)
         }
     }
 
