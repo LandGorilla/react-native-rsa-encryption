@@ -1,6 +1,6 @@
 {
   "name": "react-native-rsa-encryption",
-  "version": "0.1.0",
+  "version": "0.2.1",
   "description": "Encrypts data using RSA 4096",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",

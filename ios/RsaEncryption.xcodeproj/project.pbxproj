@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		356626162B141DE2008D011E /* Dictionary+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 356626152B141DE2008D011E /* Dictionary+.swift */; };
 		356626182B141DF0008D011E /* Encryption.swift in Sources */ = {isa = PBXBuildFile; fileRef = 356626172B141DF0008D011E /* Encryption.swift */; };
+		359684582CD8350300005DAF /* Generation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 359684572CD8350300005DAF /* Generation.swift */; };
 		F4FF95D7245B92E800C19C63 /* RsaEncryption.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4FF95D6245B92E800C19C63 /* RsaEncryption.swift */; };
 /* End PBXBuildFile section */
 
@@ -29,6 +30,7 @@
 		356626152B141DE2008D011E /* Dictionary+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Dictionary+.swift"; sourceTree = "<group>"; };
 		356626172B141DF0008D011E /* Encryption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Encryption.swift; sourceTree = "<group>"; };
 		3566261B2B145F10008D011E /* Decryption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Decryption.swift; sourceTree = "<group>"; };
+		359684572CD8350300005DAF /* Generation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Generation.swift; sourceTree = "<group>"; };
 		B3E7B5891CC2AC0600A0062D /* RsaEncryption.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RsaEncryption.mm; sourceTree = "<group>"; };
 		F4FF95D5245B92E700C19C63 /* RsaEncryption-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "RsaEncryption-Bridging-Header.h"; sourceTree = "<group>"; };
 		F4FF95D6245B92E800C19C63 /* RsaEncryption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RsaEncryption.swift; sourceTree = "<group>"; };
@@ -65,6 +67,7 @@
 			isa = PBXGroup;
 			children = (
 				3566261B2B145F10008D011E /* Decryption.swift */,
+				359684572CD8350300005DAF /* Generation.swift */,
 				356626172B141DF0008D011E /* Encryption.swift */,
 				F4FF95D6245B92E800C19C63 /* RsaEncryption.swift */,
 				B3E7B5891CC2AC0600A0062D /* RsaEncryption.mm */,
@@ -134,6 +137,7 @@
 				356626182B141DF0008D011E /* Encryption.swift in Sources */,
 				F4FF95D7245B92E800C19C63 /* RsaEncryption.swift in Sources */,
 				356626162B141DE2008D011E /* Dictionary+.swift in Sources */,
+				359684582CD8350300005DAF /* Generation.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -244,6 +248,7 @@
 					"$(SRCROOT)/../../../React/**",
 					"$(SRCROOT)/../../react-native/React/**",
 				);
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = RsaEncryption;
@@ -263,6 +268,7 @@
 					"$(SRCROOT)/../../../React/**",
 					"$(SRCROOT)/../../react-native/React/**",
 				);
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = RsaEncryption;

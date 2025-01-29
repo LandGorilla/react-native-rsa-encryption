@@ -1,7 +1,12 @@
 import * as React from 'react';
 
-import { StyleSheet, View, Text } from 'react-native';
-import { encrypt, decrypt } from 'react-native-rsa-encryption';
+import { StyleSheet, View, Text, Platform } from 'react-native';
+import {
+  encrypt,
+  decrypt,
+  generateKeyPair,
+  generateImageSignature,
+} from 'react-native-rsa-encryption';
 
 const publicKey = `-----BEGIN PUBLIC KEY-----
 MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEA8V6SmMNGSJAIR9AfBlfe
@@ -85,6 +90,18 @@ export default function App() {
       try {
         const encryptedData = await encrypt(publicKey, data);
         setEncrypted(encryptedData);
+
+        const keyPair = await generateKeyPair(); //android return a JSON
+        if (Platform.OS === 'ios') {
+          console.log('privateKey: ' + keyPair.privateKey);
+          console.log('publicKey: ' + keyPair.publicKey);
+        }
+
+        if (Platform.OS === 'android') {
+          const keyPairObject = JSON.parse(keyPair as unknown as string);
+          console.log('privateKey-android: ' + keyPairObject.privateKey);
+          console.log('publicKey-android: ' + keyPairObject.publicKey);
+        }
 
         const decryptedData = await decrypt(privateKey, encryptedData);
         setDecrypted(decryptedData);

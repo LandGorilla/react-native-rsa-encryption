@@ -2,12 +2,12 @@ import SwiftyRSA
 
 @objc(RsaEncryption)
 class RsaEncryption: NSObject {
-
+    
     @objc(encrypt:withData:withResolver:withRejecter:)
     func encrypt(
         pemEncoded: String,
         data: [String: String],
-        resolve: RCTPromiseResolveBlock, 
+        resolve: RCTPromiseResolveBlock,
         reject: RCTPromiseRejectBlock
     ) -> Void {
         guard let message = data.stringRepresentation else {
@@ -41,6 +41,32 @@ class RsaEncryption: NSObject {
         }
         
         resolve(decrypted)
+    }
+    
+    @objc(generateKeyPair:withRejecter:)
+    func generateKeyPair(resolve: RCTPromiseResolveBlock,
+                         reject: RCTPromiseRejectBlock) {
+        guard let tuple = Generation.generateKeyPair() else {
+            let error = GenerationError.failedToGeneratePrivateKey
+            reject(error.code, error.message, error)
+            return
+        }
+        resolve(["privateKey": tuple.privateKey, "publicKey": tuple.publicKey])
+    }
+    
+    @objc(generateImageSignature:withPrivateKey:withResolver:withRejecter:)
+    func generateImageSignature(path: String,
+                                privateKey: String,
+                                resolve: RCTPromiseResolveBlock,
+                                reject: RCTPromiseRejectBlock) {
+        do {
+            let signature = try Generation.generateImageSignature(path: path, pemPrivateKey: privateKey)
+            resolve(signature)
+        } catch let error as GenerationError {
+            reject(error.code, error.message, error)
+        } catch {
+            reject("", "", error)
+        }
     }
 }
 
