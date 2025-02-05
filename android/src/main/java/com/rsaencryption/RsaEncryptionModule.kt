@@ -120,7 +120,7 @@ class RsaEncryptionModule(reactContext: ReactApplicationContext) :
             val signedData = signature.sign()
 
             // Codificar en Base64 y resolver la promesa
-            val signatureBase64 = Base64.encodeToString(signedData, Base64.DEFAULT)
+            val signatureBase64 = Base64.encodeToString(signedData, Base64.NO_WRAP)
             promise.resolve(signatureBase64)
         } catch (e: Exception) {
             promise.reject("ImageSignatureError", "Error generating image signature", e)
