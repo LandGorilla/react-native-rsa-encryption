@@ -3,6 +3,8 @@ import SwiftyRSA
 @objc(RsaEncryption)
 class RsaEncryption: NSObject {
     
+    private let signer = SecureEnclaveSigner()
+    
     @objc(encrypt:withData:withResolver:withRejecter:)
     func encrypt(
         pemEncoded: String,
@@ -42,30 +44,28 @@ class RsaEncryption: NSObject {
         
         resolve(decrypted)
     }
-    
-    @objc(generateKeyPair:withRejecter:)
-    func generateKeyPair(resolve: RCTPromiseResolveBlock,
-                         reject: RCTPromiseRejectBlock) {
-        guard let tuple = Generation.generateKeyPair() else {
-            let error = GenerationError.failedToGeneratePrivateKey
-            reject(error.code, error.message, error)
-            return
-        }
-        resolve(["privateKey": tuple.privateKey, "publicKey": tuple.publicKey])
-    }
-    
-    @objc(generateImageSignature:withPrivateKey:withResolver:withRejecter:)
-    func generateImageSignature(path: String,
-                                privateKey: String,
-                                resolve: RCTPromiseResolveBlock,
-                                reject: RCTPromiseRejectBlock) {
+
+    @objc(getPublicKeyPEM:withResolver:withRejecter:)
+    func getPublicKeyPEM(tag: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
         do {
-            let signature = try Generation.generateImageSignature(path: path, pemPrivateKey: privateKey)
-            resolve(signature)
-        } catch let error as GenerationError {
-            reject(error.code, error.message, error)
+            let pem = try signer.getPublicKeyPEM(tag: tag)
+            resolve(pem)
+        } catch let err as GenerationError {
+            reject(err.code, err.localizedDescription, err)
         } catch {
-            reject("", "", error)
+            reject("unknown_error", error.localizedDescription, error)
+        }
+    }
+
+    @objc(generateImageSignature:withTag:withResolver:withRejecter:)
+    func generateImageSignature(path: String, tag: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        do {
+            let signature = try signer.generateImageSignature(path: path, tag: tag)
+            resolve(signature)
+        } catch let err as GenerationError {
+            reject(err.code, err.localizedDescription, err)
+        } catch {
+            reject("unknown_error", error.localizedDescription, error)
         }
     }
 }
