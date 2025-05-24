@@ -25,22 +25,34 @@ try {
     const encryptedData = await encrypt(publicKey, data);
     const decryptedData = await decrypt(privateKey, encryptedData);
 
-        const keyPair = await generateKeyPair(); //android return a JSON
-        if (Platform.OS === 'ios') {
-          console.log('privateKey: ' + keyPair.privateKey);
-          console.log('publicKey: ' + keyPair.publicKey);
-        }
+    if (Platform.OS === 'ios') {
+      const tag = `signerID_${UserID}`; // This tag is just an identifier
+      const publicKeyPEM = await getPublicKeyPEM(tag);
+      const signature = await generateImageSignature("/path/to/image", tag);
+      console.log('publicKeyPEM: ' + publicKeyPEM);
+      console.log('signature: ' + signature);
+    }
 
-        if (Platform.OS === 'android') {
-          const keyPairObject = JSON.parse(keyPair as unknown as string);
-          console.log('privateKey-android: ' + keyPairObject.privateKey);
-          console.log('publicKey-android: ' + keyPairObject.publicKey);
-        }
-    const signature = await generateImageSignature("/path/to/image", keyPair.privateKey);
+    if (Platform.OS === 'android') {
+      const keyPair = await generateKeyPair(); //android return a JSON
+      const keyPairObject = JSON.parse(keyPair as unknown as string);
+      const signature = await generateImageSignature("/path/to/image", keyPair.privateKey);
+      console.log('privateKey-android: ' + keyPairObject.privateKey);
+      console.log('publicKey-android: ' + keyPairObject.publicKey);
+    }
+    
 } catch (error) {
     console.error("Error in encryption/decryption process", error);
 }
 ```
+
+The tag serves as an identifier for retrieving the public key or signing. Please use a tag formatted like this:
+
+```js
+const tag = `signerID_${UserID}`;
+```
+
+This is important to avoid using the same key for multiple users.
 
 ## Example app
 
