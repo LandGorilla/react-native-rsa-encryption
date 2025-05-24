@@ -73,14 +73,20 @@ iQuaka6p7v2qOyAZ5Ua4jqZEMpZFLeEpYDzIWIffRFb5DcxUQQMVtaxL/SKO
 
 async function getTestImagePath() {
   const dest = `${RNFS.DocumentDirectoryPath}/test.png`;
-
-  // on Android copy from apk assets; on iOS it'll copy from your bundle
-  if (Platform.OS === 'android') {
-    await RNFS.copyFileAssets('test.png', dest);
-  } else {
-    await RNFS.copyFile(`${RNFS.MainBundlePath}/test.png`, dest);
+  const exists = await RNFS.exists(dest);
+  if (!exists) {
+    try {
+      if (Platform.OS === 'android') {
+        // copy from android/assets
+        await RNFS.copyFileAssets('test.png', dest);
+      } else {
+        // copy from iOS bundle
+        await RNFS.copyFile(`${RNFS.MainBundlePath}/test.png`, dest);
+      }
+    } catch (err) {
+      console.warn('Could not copy test.png, ignoring:', err);
+    }
   }
-
   return dest;
 }
 
@@ -103,7 +109,7 @@ export default function App() {
         setEncrypted(encryptedData);
 
         const tag = "signerID";
-        const publicKeyPEM = await getPublicKeyPEM(tag); //android return a JSON
+        const publicKeyPEM = await getPublicKeyPEM(tag);
         setPublicKeyPEM(await getPublicKeyPEM(tag));
 
         const path = await getTestImagePath();
@@ -116,9 +122,7 @@ export default function App() {
         }
 
         if (Platform.OS === 'android') {
-          // const keyPairObject = JSON.parse(keyPair as unknown as string);
-          // console.log('privateKey-android: ' + keyPairObject.privateKey);
-          // console.log('publicKey-android: ' + keyPairObject.publicKey);
+          // print keys from Android here
         }
 
         const decryptedData = await decrypt(privateKey, encryptedData);
