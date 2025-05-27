@@ -1,12 +1,8 @@
 import * as React from 'react';
 
 import { StyleSheet, View, Text, Platform } from 'react-native';
-import {
-  encrypt,
-  decrypt,
-  generateKeyPair,
-  generateImageSignature,
-} from 'react-native-rsa-encryption';
+import { encrypt, decrypt, getPublicKeyPEM, generateImageSignature } from 'react-native-rsa-encryption';
+import RNFS from 'react-native-fs';
 
 const publicKey = `-----BEGIN PUBLIC KEY-----
 MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEA8V6SmMNGSJAIR9AfBlfe
@@ -75,9 +71,30 @@ eYKJH9AWoQsjdfKqVyN4pRq+N+3om+FPfAM3gOALbWtFas4qWDcximoERx+OAgIP
 iQuaka6p7v2qOyAZ5Ua4jqZEMpZFLeEpYDzIWIffRFb5DcxUQQMVtaxL/SKO
 -----END RSA PRIVATE KEY-----`;
 
+async function getTestImagePath() {
+  const dest = `${RNFS.DocumentDirectoryPath}/test.png`;
+  const exists = await RNFS.exists(dest);
+  if (!exists) {
+    try {
+      if (Platform.OS === 'android') {
+        // copy from android/assets
+        await RNFS.copyFileAssets('test.png', dest);
+      } else {
+        // copy from iOS bundle
+        await RNFS.copyFile(`${RNFS.MainBundlePath}/test.png`, dest);
+      }
+    } catch (err) {
+      console.warn('Could not copy test.png, ignoring:', err);
+    }
+  }
+  return dest;
+}
+
 export default function App() {
   const [encrypted, setEncrypted] = React.useState<any | undefined>();
   const [decrypted, setDecrypted] = React.useState<any | undefined>();
+  const [publicKeyPEM, setPublicKeyPEM] = React.useState<any | undefined>();
+  const [signature, setSignature] = React.useState<any | undefined>();
 
   React.useEffect(() => {
     const handleEncryptionDecryption = async () => {
@@ -91,16 +108,21 @@ export default function App() {
         const encryptedData = await encrypt(publicKey, data);
         setEncrypted(encryptedData);
 
-        const keyPair = await generateKeyPair(); //android return a JSON
+        const tag = "signerID";
+        const publicKeyPEM = await getPublicKeyPEM(tag);
+        setPublicKeyPEM(await getPublicKeyPEM(tag));
+
+        const path = await getTestImagePath();
+        const generatedSignature = await generateImageSignature(path, tag);
+        setSignature(generatedSignature);
+        
         if (Platform.OS === 'ios') {
-          console.log('privateKey: ' + keyPair.privateKey);
-          console.log('publicKey: ' + keyPair.publicKey);
+          console.log('publicKey PEM: ' + publicKeyPEM);
+          console.log('signature: ' + generatedSignature);
         }
 
         if (Platform.OS === 'android') {
-          const keyPairObject = JSON.parse(keyPair as unknown as string);
-          console.log('privateKey-android: ' + keyPairObject.privateKey);
-          console.log('publicKey-android: ' + keyPairObject.publicKey);
+          // print keys from Android here
         }
 
         const decryptedData = await decrypt(privateKey, encryptedData);
@@ -108,6 +130,7 @@ export default function App() {
       } catch (error) {
         console.error('Error in encryption/decryption process', error);
       }
+
     };
 
     handleEncryptionDecryption();
@@ -117,6 +140,8 @@ export default function App() {
     <View style={styles.container}>
       <Text>Encrypted: {encrypted}</Text>
       <Text>Decrypted: {decrypted}</Text>
+      <Text>Public Key PEM: {publicKeyPEM}</Text>
+      <Text>Signature: {signature}</Text>
     </View>
   );
 }

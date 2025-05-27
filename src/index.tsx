@@ -31,18 +31,10 @@ export function decrypt(
   return RsaEncryption.decrypt(certificate, encrypted);
 }
 
-interface KeyPair {
-  publicKey: string;
-  privateKey: string;
+export function getPublicKeyPEM(tag: string): Promise<string> {
+  return RsaEncryption.getPublicKeyPEM(tag);
 }
 
-export function generateKeyPair(): Promise<KeyPair> {
-  return RsaEncryption.generateKeyPair();
-}
-
-export function generateImageSignature(
-  path: string,
-  privateKey: string
-): Promise<string> {
-  return RsaEncryption.generateImageSignature(path, privateKey);
+export function generateImageSignature(path: string, tag: string): Promise<string> {
+  return RsaEncryption.generateImageSignature(path, tag);
 }
