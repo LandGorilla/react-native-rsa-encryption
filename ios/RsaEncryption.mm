@@ -10,12 +10,10 @@ RCT_EXTERN_METHOD(decrypt:(nonnull NSString *)pemEncoded withEncryptedMessage:(n
                   withResolver:(RCTPromiseResolveBlock)resolve
                   withRejecter:(RCTPromiseRejectBlock)reject)
 
-RCT_EXTERN_METHOD(getPublicKeyPEM:(nonnull NSString *)tag
-                  withResolver:(RCTPromiseResolveBlock)resolve
-                  withRejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXTERN_METHOD(generateKeyPair:(RCTPromiseResolveBlock)resolve withRejecter:(RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(generateImageSignature:(nonnull NSString *)path
-                  withTag:(nonnull NSString *)tag
+                  withPrivateKey:(nonnull NSString *)privateKey
                   withResolver:(RCTPromiseResolveBlock)resolve
                   withRejecter:(RCTPromiseRejectBlock)reject)
 
