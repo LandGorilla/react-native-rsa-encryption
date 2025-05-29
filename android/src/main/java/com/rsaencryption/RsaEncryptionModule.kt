@@ -1,133 +1,169 @@
 package com.rsaencryption
 
-import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.bridge.ReactContextBaseJavaModule
-import com.facebook.react.bridge.ReactMethod
-import com.facebook.react.bridge.Promise
-import org.bouncycastle.jce.provider.BouncyCastleProvider
-import java.security.KeyFactory
-import java.security.PublicKey
-import java.security.PrivateKey
-import java.security.Security
-import java.security.spec.X509EncodedKeySpec
-import java.security.spec.PKCS8EncodedKeySpec
-import javax.crypto.Cipher
+import android.content.Context
+import android.os.Build
+import android.security.keystore.KeyGenParameterSpec
+import android.security.keystore.KeyProperties
 import android.util.Base64
-import org.json.JSONObject
-import java.security.KeyPairGenerator
+import com.facebook.react.bridge.*
+import org.bouncycastle.jce.provider.BouncyCastleProvider
 import java.io.File
-import java.security.Signature
-
+import java.security.*
+import java.security.spec.*
+import javax.crypto.Cipher
 
 class RsaEncryptionModule(reactContext: ReactApplicationContext) :
   ReactContextBaseJavaModule(reactContext) {
 
-  override fun getName(): String {
-    return NAME
-  }
+  private val context: Context = reactContext
 
+  override fun getName(): String = "RsaEncryption"
+
+  // ---------- PEM Encryption ----------
   @ReactMethod
   fun encrypt(pk: String, txt: String, promise: Promise) {
     try {
-        Security.addProvider(BouncyCastleProvider())
-        val publicKeyPEM = pk.replace("-----BEGIN PUBLIC KEY-----", "").replace(System.lineSeparator(), "").replace("-----END PUBLIC KEY-----", "").replace("\n", "")
-        val publicBytes: ByteArray = Base64.decode(publicKeyPEM, Base64.DEFAULT)
-        val keySpec = X509EncodedKeySpec(publicBytes)
-        val keyFactory: KeyFactory = KeyFactory.getInstance("RSA")
-        val pubKey: PublicKey = keyFactory.generatePublic(keySpec)
-        val cipher: Cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding", "BC")
-        cipher.init(Cipher.ENCRYPT_MODE, pubKey)
-        var encrypted = cipher.doFinal(txt.toByteArray())
-        var encoded = Base64.encodeToString(encrypted, Base64.DEFAULT)
+      Security.addProvider(BouncyCastleProvider())
 
-        promise.resolve(encoded)
+      val publicKeyPEM = pk
+        .replace("-----BEGIN PUBLIC KEY-----", "")
+        .replace("-----END PUBLIC KEY-----", "")
+        .replace("\\s".toRegex(), "")
+
+      val publicBytes = Base64.decode(publicKeyPEM, Base64.DEFAULT)
+      val keySpec = X509EncodedKeySpec(publicBytes)
+      val keyFactory = KeyFactory.getInstance("RSA")
+      val pubKey = keyFactory.generatePublic(keySpec)
+
+      val cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding", "BC")
+      cipher.init(Cipher.ENCRYPT_MODE, pubKey)
+
+      val encrypted = cipher.doFinal(txt.toByteArray())
+      val encoded = Base64.encodeToString(encrypted, Base64.NO_WRAP)
+
+      promise.resolve(encoded)
     } catch (e: Exception) {
-        promise.reject(e.toString(), e)
+      promise.reject("ENCRYPT_ERROR", e)
     }
   }
 
   @ReactMethod
   fun decrypt(pk: String, txt: String, promise: Promise) {
     try {
-        Security.addProvider(BouncyCastleProvider())
-        val privateKeyPEM = pk.replace("-----BEGIN RSA PRIVATE KEY-----", "").replace(System.lineSeparator(), "").replace("-----END RSA PRIVATE KEY-----", "")
-        val privateBytes: ByteArray = Base64.decode(privateKeyPEM, Base64.DEFAULT)
-        val keySpec = PKCS8EncodedKeySpec(privateBytes)
-        val keyFactory: KeyFactory = KeyFactory.getInstance("RSA")
-        val privKey: PrivateKey = keyFactory.generatePrivate(keySpec)
-        val cipher: Cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding", "BC")
-        cipher.init(Cipher.DECRYPT_MODE, privKey)
-        val encryptedBytes = Base64.decode(txt, Base64.DEFAULT)
-        var decrypted = cipher.doFinal(encryptedBytes)
-        var decoded = String(decrypted)
+      Security.addProvider(BouncyCastleProvider())
 
-        promise.resolve(decoded)
+      val privateKeyPEM = pk
+        .replace("-----BEGIN RSA PRIVATE KEY-----", "")
+        .replace("-----BEGIN PRIVATE KEY-----", "")
+        .replace("-----END RSA PRIVATE KEY-----", "")
+        .replace("-----END PRIVATE KEY-----", "")
+        .replace("\\s".toRegex(), "")
+
+      val privateBytes = Base64.decode(privateKeyPEM, Base64.DEFAULT)
+      val keySpec = PKCS8EncodedKeySpec(privateBytes)
+      val keyFactory = KeyFactory.getInstance("RSA")
+      val privKey = keyFactory.generatePrivate(keySpec)
+
+      val cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding", "BC")
+      cipher.init(Cipher.DECRYPT_MODE, privKey)
+
+      val encryptedBytes = Base64.decode(txt, Base64.DEFAULT)
+      val decrypted = cipher.doFinal(encryptedBytes)
+
+      promise.resolve(String(decrypted))
     } catch (e: Exception) {
-        promise.reject(e.toString(), e)
+      promise.reject("DECRYPT_ERROR", e)
     }
   }
 
+  // ---------- Keystore Public Key ----------
+  @ReactMethod
+  fun getPublicKeyPEM(tag: String, promise: Promise) {
+    try {
+      val keyStore = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
 
-    @ReactMethod
-    fun generateKeyPair(promise: Promise) {
-        try {
+      // Intenta recuperar clave existente
+      val cert = keyStore.getCertificate(tag)
 
-            val keyPairGenerator = KeyPairGenerator.getInstance("RSA")
-            keyPairGenerator.initialize(4096)
-            val keyPair = keyPairGenerator.generateKeyPair()
+      if (cert == null) {
+        // No existe, generamos una nueva
+        generateKeyPairWithFallback(tag)
+      }
 
+      val publicKey = keyStore.getCertificate(tag)?.publicKey
+        ?: throw Exception("Public key not found for tag: $tag")
 
-            val publicKey = keyPair.public
-            val privateKey = keyPair.private
+      val publicKeyBytes = publicKey.encoded
+      val base64PublicKey = Base64.encodeToString(publicKeyBytes, Base64.NO_WRAP)
 
+      val pem = "-----BEGIN PUBLIC KEY-----\n" +
+        base64PublicKey.chunked(64).joinToString("\n") +
+        "\n-----END PUBLIC KEY-----"
 
-            val publicKeyBase64 = Base64.encodeToString(publicKey.encoded, Base64.DEFAULT)
-            val privateKeyBase64 = Base64.encodeToString(privateKey.encoded, Base64.DEFAULT)
+      promise.resolve(pem)
+    } catch (e: Exception) {
+      promise.reject("PUBLIC_KEY_ERROR", e)
+    }
+  }
 
+  // ---------- Keystore Firma de Imágenes ----------
+  @ReactMethod
+  fun generateImageSignature(path: String, tag: String, promise: Promise) {
+    try {
+      val file = File(path)
+      if (!file.exists()) throw Exception("File not found at path: $path")
 
-            val publicKeyPEM = "-----BEGIN PUBLIC KEY-----\n${publicKeyBase64.trim()}\n-----END PUBLIC KEY-----"
-            val privateKeyPEM = "-----BEGIN PRIVATE KEY-----\n${privateKeyBase64.trim()}\n-----END PRIVATE KEY-----"
+      val imageBytes = file.readBytes()
 
+      val keyStore = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
+      val privateKey = keyStore.getKey(tag, null) as? PrivateKey
+        ?: throw Exception("Private key not found for tag: $tag")
 
-            val result = mapOf("privateKey" to privateKeyPEM, "publicKey" to publicKeyPEM)
+      val signature = Signature.getInstance("SHA256withRSA")
+      signature.initSign(privateKey)
+      signature.update(imageBytes)
 
+      val signatureBytes = signature.sign()
+      val signatureBase64 = Base64.encodeToString(signatureBytes, Base64.NO_WRAP)
 
-            promise.resolve(JSONObject(result).toString())
-        } catch (e: Exception) {
-            promise.reject("KeyGenerationError", "Error-generateKeyPair", e)
-        }
+      promise.resolve(signatureBase64)
+    } catch (e: Exception) {
+      promise.reject("SIGNATURE_ERROR", e)
+    }
+  }
+
+  // ---------- StrongBox KeyPair Fallback ----------
+  private fun generateKeyPairWithFallback(tag: String) {
+    val keyPairGenerator = KeyPairGenerator.getInstance(
+      KeyProperties.KEY_ALGORITHM_RSA,
+      "AndroidKeyStore"
+    )
+
+    val builder = KeyGenParameterSpec.Builder(
+      tag,
+      KeyProperties.PURPOSE_SIGN or KeyProperties.PURPOSE_VERIFY
+    )
+      .setKeySize(2048)
+      .setDigests(KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA512)
+      .setSignaturePaddings(KeyProperties.SIGNATURE_PADDING_RSA_PKCS1)
+      .setUserAuthenticationRequired(false)
+
+    // Intentar usar StrongBox
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+      try {
+        builder.setIsStrongBoxBacked(true)
+        keyPairGenerator.initialize(builder.build())
+        keyPairGenerator.generateKeyPair()
+        return
+      } catch (e: Exception) {
+        // Falló con StrongBox, seguimos sin él
+      }
     }
 
-    @ReactMethod
-    fun generateImageSignature(path: String, privateKeyPEM: String, promise: Promise) {
-        try {
-            // Leer los bytes de la imagen
-            val imageBytes = File(path).readBytes()
-
-            // Convertir clave privada PEM a PrivateKey
-            val cleanedKey = privateKeyPEM.replace("-----BEGIN PRIVATE KEY-----", "")
-                .replace("-----END PRIVATE KEY-----", "")
-                .replace("\\s".toRegex(), "")
-            val keyBytes = Base64.decode(cleanedKey, Base64.DEFAULT)
-            val keySpec = PKCS8EncodedKeySpec(keyBytes)
-            val keyFactory = KeyFactory.getInstance("RSA")
-            val privateKey = keyFactory.generatePrivate(keySpec)
-
-            // Firmar los datos
-            val signature = Signature.getInstance("SHA256withRSA")
-            signature.initSign(privateKey)
-            signature.update(imageBytes)
-            val signedData = signature.sign()
-
-            // Codificar en Base64 y resolver la promesa
-            val signatureBase64 = Base64.encodeToString(signedData, Base64.NO_WRAP)
-            promise.resolve(signatureBase64)
-        } catch (e: Exception) {
-            promise.reject("ImageSignatureError", "Error generating image signature", e)
-        }
-    }
-
-  companion object {
-    const val NAME = "RsaEncryption"
+    // Generar sin StrongBox
+    builder.setIsStrongBoxBacked(false)
+    keyPairGenerator.initialize(builder.build())
+    keyPairGenerator.generateKeyPair()
   }
 }
+
